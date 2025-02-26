@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Always use pnpm
+- Don’t run dev on your own
+- Always use Typescript

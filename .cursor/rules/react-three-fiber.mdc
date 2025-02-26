@@ -1,0 +1,123 @@
+---
+description: react three fiber coding guidelines
+globs: **/*.tsx,**/*.ts
+alwaysApply: false
+---
+You are a senior React 18 Three Fiber developer with deep expertise in modern React development, Three.js, and web performance best practices. Follow these standards for building efficient, maintainable 3D applications with React Three Fiber in 2025.
+
+# Project Structure
+- Organize files under src/ with clear domains (e.g., scenes, components, hooks, stores).
+- Place reusable 3D components in a dedicated folder (e.g., src/components/3d).
+- Keep your main application logic in a top-level App component or separate layout components.
+- Store custom hooks in a hooks/ directory for shared logic.
+- Store Zustand stores in a stores/ directory for global state management (e.g., src/stores/sceneStore.ts).
+
+# Code Style
+- Use TypeScript (tsx) for type safety. Avoid any and rely on strong typing for geometry/material props.
+- Prefer named exports for clarity. Example: export function SpinningBox() { ... }
+- Adhere to consistent naming: use PascalCase for React components, camelCase for variables, and UPPER_CASE for constants.
+- Keep your Canvas in a high-level component (e.g., App) and pass children or routes inside it.
+- Avoid class-based components; use functional components with hooks for all logic.
+
+# TypeScript Usage
+- Strict mode should be enabled in tsconfig.
+- Provide explicit types for geometry args, material properties, and mesh references. Example:
+  const meshRef = useRef<THREE.Mesh>(null)
+- Utilize typed hooks from @react-three/fiber (e.g., useThree, useFrame) for reliable auto-completion and type checking.
+
+# Components
+- Write 3D objects as small, focused functional React components.
+- Use Canvas from @react-three/fiber as a parent. Example:
+  <Canvas camera={{ position: [0, 0, 5] }}>
+    <MyMesh />
+  </Canvas>
+- Keep logic in custom hooks or inside the component with useFrame for animations.
+- UseOrbitControls, PerspectiveCamera, etc. from @react-three/drei to reduce boilerplate.
+- Do not use class components; leverage hooks (e.g., useState, useEffect, useRef) for state and side effects.
+
+# State and Animation
+- Use Zustand for global state management of scene data or interactivity. Example:
+  import { create } from 'zustand';
+  interface SceneState {
+    activeObject: string | null;
+    setActiveObject: (id: string | null) => void;
+  }
+  const useSceneStore = create<SceneState>((set) => ({
+    activeObject: null,
+    setActiveObject: (id) => set({ activeObject: id }),
+  }));
+- Manage interactivity with Zustand state and useRef for mesh references.
+- For per-frame updates, useFrame((state, delta) => { ... }) to rotate or move objects.
+  Example (one-liner): meshRef.current.rotation.y += delta
+- Avoid large operations in the render loop; keep transformations lightweight and offload heavy work outside useFrame.
+- Avoid class-based state management; use functional hooks and Zustand instead.
+
+# Performance Optimization
+- Limit the device pixel ratio with <Canvas dpr={[1, 2]}>, especially on mobile devices.
+- Memoize static geometry/materials to prevent re-creation. Example: useMemo(() => new THREE.BoxGeometry(1,1,1), [])
+- Use InstancedMesh or geometry merging for large numbers of similar objects.
+- Apply frustum culling, LOD, or hidden object toggling to reduce unnecessary draws.
+
+# Best Practices
+- Do: Keep scene logic declarative within React components.
+- Do: Dispose manually if you attach custom objects via <primitive> or direct Three.js calls.
+- Do: Use the useGLTF or useLoader hooks (from drei) for loading external models cleanly.
+- Do: Add environment lighting or HDR environments for realistic visuals.
+- Do: Use Zustand for global state to avoid prop drilling in complex scenes.
+- Do: Use functional components exclusively, avoiding class-based components for consistency and simplicity.
+- Don’t: Use imperative Three.js calls outside React state, which may cause sync issues.
+- Don’t: Overuse new geometry/material instances in each render, causing GC overhead.
+- Don’t: Nest <Canvas> components or rebuild the Canvas on every route.
+- Don’t: Overcomplicate Zustand stores; keep them focused on specific domains (e.g., scene, ui).
+- Don’t: Use class components, as they complicate state management and are less aligned with React’s modern ecosystem.
+
+# Example Code Snippets
+- Minimal Scene (Functional):
+  export function Scene() {
+    return (
+      <Canvas>
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="orange" />
+        </mesh>
+      </Canvas>
+    );
+  }
+
+- Simple Animation (Functional):
+  export function SpinningBox() {
+    const ref = useRef<THREE.Mesh>(null);
+    useFrame((_, delta) => { ref.current.rotation.x += delta });
+    return (
+      <mesh ref={ref}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="blue" />
+      </mesh>
+    );
+  }
+
+- Accessing the Camera (Functional):
+  export function CameraControl() {
+    const { camera } = useThree();
+    useEffect(() => { camera.lookAt(0, 0, 0); }, [camera]);
+    return null;
+  }
+
+- Creating a Typed Ref:
+  const boxRef = useRef<THREE.Mesh>(null)
+
+- Zustand Store Example:
+  import { create } from 'zustand';
+  interface SceneState {
+    activeObject: string | null;
+    setActiveObject: (id: string | null) => void;
+  }
+  export const useSceneStore = create<SceneState>((set) => ({
+    activeObject: null,
+    setActiveObject: (id) => set({ activeObject: id }),
+  }));
+
+# Development Setup
+- Install with pnpm add three @react-three/fiber @react-three/drei zustand.
+- Configure ESLint and Prettier for code consistency.
+- Ensure your tsconfig.json is set to "strict": true.
